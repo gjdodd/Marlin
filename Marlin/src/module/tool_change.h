@@ -26,12 +26,14 @@
 #if EXTRUDERS > 1
 
   typedef struct {
-    float swap_length;
-    int16_t prime_speed, retract_speed;
-    #if ENABLED(SINGLENOZZLE_SWAP_PARK)
-      struct { float x, y; } change_point;
+    #if ENABLED(SINGLENOZZLE)
+      float swap_length;
+      int16_t prime_speed, retract_speed;
+      #if ENABLED(SINGLENOZZLE_SWAP_PARK)
+        struct { float x, y; } change_point;
+      #endif
     #endif
-    float z_raise = TOOLCHANGE_ZRAISE;
+    float z_raise;
   } toolchange_settings_t;
 
   extern toolchange_settings_t toolchange_settings;
@@ -69,8 +71,6 @@
     extern uint8_t singlenozzle_fan_speed[EXTRUDERS];
   #endif
 #endif
-
-extern float z_raise;
 
 /**
  * Perform a tool-change, which may result in moving the
