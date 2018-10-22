@@ -21,7 +21,7 @@
 
 #include "../../../inc/MarlinConfigPre.h"
 
-#if ENABLED(EXTENSIBLE_UI)
+#if ENABLED(EXTENSIBLE_UI) && ENABLED(EXTENSIBLE_UI_EXAMPLE)
 
 #include "../ui_api.h"
 
@@ -47,9 +47,9 @@ namespace UI {
   }
   void onIdle() {}
   void onPrinterKilled(const char* msg) {}
-  void onMediaInserted();
-  void onMediaError();
-  void onMediaRemoved();
+  void onMediaInserted(){};
+  void onMediaError(){};
+  void onMediaRemoved(){};
   void onPlayTone(const uint16_t frequency, const uint16_t duration) {}
   void onPrintTimerStarted() {}
   void onPrintTimerPaused() {}

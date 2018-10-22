@@ -102,6 +102,20 @@ extern "C" volatile millis_t _millis;
   #define NUM_SERIAL 1
 #endif
 
+#if ENABLED(EXTENSIBLE_UI_NEXTION)
+	#if EXTENSIBLE_UI_NEXTION_SERIAL == -1
+	  #define NXTSERIAL UsbSerial
+	#elif EXTENSIBLE_UI_NEXTION_SERIAL == 0
+	  #define NXTSERIAL MSerial
+	#elif EXTENSIBLE_UI_NEXTION_SERIAL == 1
+	  #define NXTSERIAL MSerial1
+	#elif EXTENSIBLE_UI_NEXTION_SERIAL == 2
+	  #define NXTSERIAL MSerial2
+	#elif EXTENSIBLE_UI_NEXTION_SERIAL == 3
+	  #define NXTSERIAL MSerial3
+	#endif
+#endif
+
 //
 // Interrupts
 //

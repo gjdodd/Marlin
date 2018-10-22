@@ -115,7 +115,9 @@ namespace UI {
     switch (axis) {
       case X: case Y: case Z: break;
       case E0: case E1: case E2: case E3: case E4: case E5:
-        active_extruder = axis - E0;
+        #if HOTENDS > 1
+          active_extruder = axis - E0;
+        #endif
         break;
       default: return;
     }
@@ -144,7 +146,9 @@ namespace UI {
       if (extruder != active_extruder)
         tool_change(extruder, 0, no_move);
     #endif
+    #if HOTENDS > 1
     active_extruder = extruder;
+    #endif
   }
 
   uint8_t getActiveTool() { return active_extruder + 1; }
@@ -491,7 +495,7 @@ namespace UI {
   }
 
   const char* FileList::filename() {
-    return IFSD(card.longFilename && card.longFilename[0]) ? card.longFilename : card.filename, "");
+    return IFSD(card.longFilename && card.longFilename[0] ? card.longFilename : card.filename, "");
   }
 
   const char* FileList::shortFilename() {

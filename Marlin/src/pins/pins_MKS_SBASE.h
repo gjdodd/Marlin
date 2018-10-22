@@ -169,6 +169,10 @@
   #define LCD_PINS_D4      P0_15   // EXP1.5
 #endif
 
+#if defined(EXTENSIBLE_UI)
+  #define BEEPER_PIN       P1_31   // EXP1.1
+#endif
+
 //
 // Ethernet pins
 //
