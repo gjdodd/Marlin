@@ -105,6 +105,18 @@ typedef int8_t pin_t;
   #else
     #define NUM_SERIAL 1
   #endif
+
+  #if ENABLED(EXTENSIBLE_UI_NEXTION)
+	#if EXTENSIBLE_UI_NEXTION_SERIAL == 0
+	  #define NXTSERIAL Serial
+	#elif EXTENSIBLE_UI_NEXTION_SERIAL == 1
+	  #define NXTSERIAL Serial1
+	#elif EXTENSIBLE_UI_NEXTION_SERIAL == 2
+	  #define NXTSERIAL Serial2
+	#elif EXTENSIBLE_UI_NEXTION_SERIAL == 3
+	  #define NXTSERIAL Serial3
+	#endif
+#endif
 #endif
 
 // --------------------------------------------------------------------------

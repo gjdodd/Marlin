@@ -22,27 +22,37 @@
 #include "../ui_api.h"
 #include "../../../gcode/queue.h"
 
-
 #if ENABLED(EXTENSIBLE_UI) && ENABLED(EXTENSIBLE_UI_NEXTION)
+#define NEX_RET_CMD_FINISHED            (0x01)
 namespace UI {
-  char inputBuffer[32];
-  bool stringEnd = false;
-
   void sendCommand(const char* cmd);
   void readCommand();
   void setValue(const char *name, uint32_t number);
   void setText(const char *name, const char *buffer);
+  bool recvRetCommandFinished(uint32_t timeout);
 
   const char* printerKilledObj = "sPrintedKilled";
   const char* messageObj = "sMessage";    
-
-  void onStartup() {        
+  float _feedRate=0;
+  bool _connected=false;
+  void onStartup() {            
     NXTSERIAL.begin(9600);
+    _connected=true;
     sendCommand("");
-    sendCommand("bkcmd=1");    
-    sendCommand("page 0");
+    sendCommand("bkcmd=0");    
   }
-  void onIdle() { readCommand(); }
+  void onIdle() { 
+      if(_connected)
+      {
+        readCommand();
+
+        if(_feedRate != getFeedRate_percent())
+        {
+          _feedRate = getFeedRate_percent();
+          setText("fr", itostr3(_feedRate));       
+        }
+      }         
+    }
   void onPrinterKilled(const char* msg) {}
   void onMediaInserted(){};
   void onMediaError(){};
@@ -58,11 +68,6 @@ namespace UI {
   void onLoadSettings() {}
   void onStoreSettings() {}
 
-  /*
-  * Send command to Nextion.
-  *
-  * @param cmd - the string of command.
-  */
   void sendCommand(const char* cmd)
   {
       while (NXTSERIAL.available())
@@ -76,50 +81,65 @@ namespace UI {
       NXTSERIAL.write(0xFF);    
   }
 
-  void readCommand() {
-    volatile char serialChar;
-    volatile uint8_t stringLength = 0;
-    stringEnd = false;
-    memset(inputBuffer, 0, 32);
-    while (NXTSERIAL.available()) {
-      serialChar = (char)NXTSERIAL.read();
+  static char inputBuffer[32];
+  static int stringLength = 0;
 
+  void readCommand() {  
+    char serialChar;    
+
+    while (NXTSERIAL.available()) {
+      serialChar = (char)NXTSERIAL.read();      
+    
       // have we finished
-      if (serialChar == '\n' || serialChar == '\r') {
-          inputBuffer[stringLength] = 0;
-          enqueue_and_echo_commands_P(inputBuffer);
-          stringEnd = true;
+      if (serialChar == '\r') {
+          enqueue_and_echo_command(inputBuffer);               
+          inputBuffer[0] = '\0';
+          stringLength = 0;
+      }
+      else if(stringLength == 0 && serialChar != 'G' && serialChar != 'M')
+      {
+        continue;
       }
       else {
-        stringEnd = false;
-
         inputBuffer[stringLength] = serialChar;
-        stringLength++;
+        inputBuffer[stringLength+1] = '\0';
+        stringLength += 1;
       }
     }
 	}
 
-  void setValue(const char *name, uint32_t number)
-  {
-      char buf[10] = {0};
-      String cmd;
-      
-      utoa(number, buf, 10);
-      cmd += name;
-      cmd += ".val=";
-      cmd += buf;
-
-      sendCommand(cmd.c_str());
-  }
-
   void setText(const char *name, const char *buffer)
   {
-      String cmd;
-      cmd += name;
-      cmd += ".txt=\"";
-      cmd += buffer;
-      cmd += "\"";
-      sendCommand(cmd.c_str());      
+      NXTSERIAL.print(name);
+      NXTSERIAL.print(".txt=\"");
+      NXTSERIAL.print(buffer);
+      NXTSERIAL.print("\"");
+      NXTSERIAL.write(0xFF);
+      NXTSERIAL.write(0xFF);
+      NXTSERIAL.write(0xFF);
+  }
+
+  bool recvRetCommandFinished(uint32_t timeout)
+  {    
+    bool ret = false;
+    uint8_t temp[4] = {0};
+    
+    NXTSERIAL.setTimeout(timeout);
+    if (sizeof(temp) != NXTSERIAL.readBytes((char *)temp, sizeof(temp)))
+    {
+        ret = false;
+    }
+
+    if (temp[0] == NEX_RET_CMD_FINISHED
+        && temp[1] == 0xFF
+        && temp[2] == 0xFF
+        && temp[3] == 0xFF
+        )
+    {
+        ret = true;
+    }    
+    
+    return ret;
   }
 }
 #endif // EXTENSIBLE_UI

@@ -1869,12 +1869,14 @@
 // packaged with Marlin. Source code for the user interface will need to
 // be placed in "src/lcd/extensible_ui/lib"
 //
-#define EXTENSIBLE_UI
-
 //#define EXTENSIBLE_UI_EXAMPLE
-#define EXTENSIBLE_UI_NEXTION
+#if ENABLED(EXTENSIBLE_UI_EXAMPLE)
+  #define EXTENSIBLE_UI
+#endif
 
+#define EXTENSIBLE_UI_NEXTION
 #if ENABLED(EXTENSIBLE_UI_NEXTION)
+  #define EXTENSIBLE_UI
   #define EXTENSIBLE_UI_NEXTION_SERIAL 0
 #endif
 
