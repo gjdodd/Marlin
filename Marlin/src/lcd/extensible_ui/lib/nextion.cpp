@@ -23,6 +23,8 @@
 #include "../../../gcode/queue.h"
 
 #if ENABLED(EXTENSIBLE_UI) && ENABLED(EXTENSIBLE_UI_NEXTION)
+#include "nextion/Nextion.h"
+
 #define NEX_RET_CMD_FINISHED            (0x01)
 namespace UI {
   void sendCommand(const char* cmd);
@@ -35,6 +37,15 @@ namespace UI {
   const char* messageObj = "sMessage";    
   float _feedRate=0;
   bool _connected=false;
+
+  NexTouch *nex_listen_list[] = 
+  {
+//      &t0,
+  //    &b0,
+    //  &b1,
+      NULL
+  };
+
   void onStartup() {            
     NXTSERIAL.begin(9600);
     _connected=true;
@@ -42,6 +53,8 @@ namespace UI {
     sendCommand("bkcmd=0");    
   }
   void onIdle() { 
+      nexLoop(nex_listen_list);
+      /*
       if(_connected)
       {
         readCommand();
@@ -51,7 +64,7 @@ namespace UI {
           _feedRate = getFeedRate_percent();
           setText("fr", itostr3(_feedRate));       
         }
-      }         
+      }         */
     }
   void onPrinterKilled(const char* msg) {}
   void onMediaInserted(){};
