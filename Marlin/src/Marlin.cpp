@@ -379,7 +379,7 @@ void manage_inactivity(const bool ignore_stepper_queue/*=false*/) {
       #if ENABLED(DISABLE_INACTIVE_E)
         disable_e_steppers();
       #endif
-      #if ENABLED(AUTO_BED_LEVELING_UBL) && ENABLED(ULTIPANEL)  // Only needed with an LCD
+      #if HAS_LCD_MENU && ENABLED(AUTO_BED_LEVELING_UBL)
         if (ubl.lcd_map_control) ubl.lcd_map_control = defer_return_to_status = false;
       #endif
     }
@@ -617,9 +617,7 @@ void kill(PGM_P const lcd_msg/*=NULL*/) {
   SERIAL_ERROR_START();
   SERIAL_ERRORLNPGM(MSG_ERR_KILLED);
 
-  #if ENABLED(EXTENSIBLE_UI)
-    UI::onPrinterKilled(lcd_msg ? lcd_msg : PSTR(MSG_KILLED));
-  #elif ENABLED(ULTRA_LCD)
+  #if ENABLED(ULTRA_LCD) || ENABLED(EXTENSIBLE_UI)
     kill_screen(lcd_msg ? lcd_msg : PSTR(MSG_KILLED));
   #else
     UNUSED(lcd_msg);
