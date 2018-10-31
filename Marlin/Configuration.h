@@ -105,7 +105,7 @@
  *
  * :[-1, 0, 1, 2, 3, 4, 5, 6, 7]
  */
-#define SERIAL_PORT -1
+#define SERIAL_PORT 0
 
 /**
  * Select a secondary serial port on the board to use for communication with the host.
@@ -133,7 +133,7 @@
 // The following define selects which electronics board you have.
 // Please choose the name from boards.h that matches your setup
 #ifndef MOTHERBOARD
-  #define MOTHERBOARD BOARD_MKS_SBASE
+  #define MOTHERBOARD BOARD_RAMPS_14_EFB
 #endif
 
 // Optional custom name for your RepStrap or other custom machine
@@ -1877,7 +1877,7 @@
 #define EXTENSIBLE_UI_NEXTION
 #if ENABLED(EXTENSIBLE_UI_NEXTION)
   #define EXTENSIBLE_UI
-  #define EXTENSIBLE_UI_NEXTION_SERIAL 0
+  #define EXTENSIBLE_UI_NEXTION_SERIAL 1
 #endif
 
 //=============================================================================

@@ -25,47 +25,126 @@
 #if ENABLED(EXTENSIBLE_UI) && ENABLED(EXTENSIBLE_UI_NEXTION)
 #include "nextion/Nextion.h"
 
-#define NEX_RET_CMD_FINISHED            (0x01)
-namespace UI {
-  void sendCommand(const char* cmd);
-  void readCommand();
-  void setValue(const char *name, uint32_t number);
-  void setText(const char *name, const char *buffer);
-  bool recvRetCommandFinished(uint32_t timeout);
+#if ENABLED(SDSUPPORT)
+  #include "../../../sd/cardreader.h"
+#endif
 
+namespace UI {
   const char* printerKilledObj = "sPrintedKilled";
   const char* messageObj = "sMessage";    
   float _feedRate=0;
   bool _connected=false;
 
+  NexVariable fr = NexVariable(1, 57, "fr");
+  NexVariable showSdPage = NexVariable(1, 5, "e2");
+
+  NexVariable t0 = NexVariable(3, 1, "t0");
+  NexVariable t1 = NexVariable(3, 2, "t1");
+  NexVariable t2 = NexVariable(3, 3, "t2");
+  NexVariable t3 = NexVariable(3, 4, "t3");
+  NexVariable t4 = NexVariable(3, 5, "t4");
+  NexVariable t5 = NexVariable(3, 6, "t5");
+  NexVariable t6 = NexVariable(3, 7, "t6");
+  NexVariable t7 = NexVariable(3, 8, "t7");
+  NexVariable t8 = NexVariable(3, 9, "t8");
+  NexVariable t9 = NexVariable(3, 10, "t9");
+
+  NexVariable down = NexVariable(3, 11, "b0");
+  NexVariable up = NexVariable(3, 12, "b1");
+
   NexTouch *nex_listen_list[] = 
   {
-//      &t0,
+        &showSdPage,
+        &up,
+        &down,
   //    &b0,
     //  &b1,
       NULL
   };
 
-  void onStartup() {            
-    NXTSERIAL.begin(9600);
-    _connected=true;
-    sendCommand("");
-    sendCommand("bkcmd=0");    
-  }
-  void onIdle() { 
-      nexLoop(nex_listen_list);
-      /*
-      if(_connected)
-      {
-        readCommand();
 
-        if(_feedRate != getFeedRate_percent())
-        {
-          _feedRate = getFeedRate_percent();
-          setText("fr", itostr3(_feedRate));       
-        }
-      }         */
+  int curPage = 0;
+  int maxFiles = 10;
+
+  void sendFilename(NexVariable obj, bool hasFile, const char *filename)
+  {
+    if(hasFile) {
+      obj.setText(filename);
+      obj.show();
     }
+    else {
+      obj.hide();
+    }     
+  }
+
+  void sendFileList()
+  {
+    FileList fileList;    
+    int startPos = curPage * 9;
+    int count = fileList.count();    
+    
+    for (uint16_t i = 0; i < maxFiles; i++) {
+      
+      bool hasFile = fileList.seek(i + startPos);   
+               
+      switch(i)
+      {
+        case 0: sendFilename(t0, hasFile, fileList.filename()); break;        
+        case 1: sendFilename(t1, hasFile, fileList.filename()); break;        
+        case 2: sendFilename(t2, hasFile, fileList.filename()); break;        
+        case 3: sendFilename(t3, hasFile, fileList.filename()); break;        
+        case 4: sendFilename(t4, hasFile, fileList.filename()); break;        
+        case 5: sendFilename(t5, hasFile, fileList.filename()); break;        
+        case 6: sendFilename(t6, hasFile, fileList.filename()); break;        
+        case 7: sendFilename(t7, hasFile, fileList.filename()); break;        
+        case 8: sendFilename(t8, hasFile, fileList.filename()); break;        
+        case 9: sendFilename(t9, hasFile, fileList.filename()); break;        
+      }
+    }
+  }
+  
+  void showSdPageCallback(void *ptr)
+  {
+    curPage = 0;
+    sendFileList();
+    up.hide();
+  }
+
+  void upCallback(void *ptr)
+  {
+    curPage -= 1;
+    if(curPage == 0) up.hide();
+    sendFileList();
+  }
+
+  void downCallback(void *ptr)
+  {
+    curPage += 1;
+    up.show();
+    sendFileList();
+  }
+
+  void onStartup() {            
+    nexInit();
+
+    showSdPage.attachPop(showSdPageCallback, &showSdPage);
+
+    up.attachPop(upCallback, &up);
+    down.attachPop(downCallback, &down);
+  }
+
+  void onIdle() { 
+      nexLoop(nex_listen_list);      
+
+      if(_feedRate != getFeedRate_percent())
+      {
+        _feedRate = getFeedRate_percent();
+
+
+        fr.setText(itostr3(_feedRate));
+      }
+    }
+
   void onPrinterKilled(const char* msg) {}
   void onMediaInserted(){};
   void onMediaError(){};
@@ -79,80 +158,6 @@ namespace UI {
   void onStatusChanged(progmem_str msg) {}
   void onFactoryReset() {}
   void onLoadSettings() {}
-  void onStoreSettings() {}
-
-  void sendCommand(const char* cmd)
-  {
-      while (NXTSERIAL.available())
-      {
-          NXTSERIAL.read();
-      }
-      
-      NXTSERIAL.print(cmd);
-      NXTSERIAL.write(0xFF);
-      NXTSERIAL.write(0xFF);
-      NXTSERIAL.write(0xFF);    
-  }
-
-  static char inputBuffer[32];
-  static int stringLength = 0;
-
-  void readCommand() {  
-    char serialChar;    
-
-    while (NXTSERIAL.available()) {
-      serialChar = (char)NXTSERIAL.read();      
-    
-      // have we finished
-      if (serialChar == '\r') {
-          enqueue_and_echo_command(inputBuffer);               
-          inputBuffer[0] = '\0';
-          stringLength = 0;
-      }
-      else if(stringLength == 0 && serialChar != 'G' && serialChar != 'M')
-      {
-        continue;
-      }
-      else {
-        inputBuffer[stringLength] = serialChar;
-        inputBuffer[stringLength+1] = '\0';
-        stringLength += 1;
-      }
-    }
-	}
-
-  void setText(const char *name, const char *buffer)
-  {
-      NXTSERIAL.print(name);
-      NXTSERIAL.print(".txt=\"");
-      NXTSERIAL.print(buffer);
-      NXTSERIAL.print("\"");
-      NXTSERIAL.write(0xFF);
-      NXTSERIAL.write(0xFF);
-      NXTSERIAL.write(0xFF);
-  }
-
-  bool recvRetCommandFinished(uint32_t timeout)
-  {    
-    bool ret = false;
-    uint8_t temp[4] = {0};
-    
-    NXTSERIAL.setTimeout(timeout);
-    if (sizeof(temp) != NXTSERIAL.readBytes((char *)temp, sizeof(temp)))
-    {
-        ret = false;
-    }
-
-    if (temp[0] == NEX_RET_CMD_FINISHED
-        && temp[1] == 0xFF
-        && temp[2] == 0xFF
-        && temp[3] == 0xFF
-        )
-    {
-        ret = true;
-    }    
-    
-    return ret;
-  }
+  void onStoreSettings() {}  
 }
 #endif // EXTENSIBLE_UI

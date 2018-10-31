@@ -73,6 +73,20 @@ public: /* methods */
      * @return true if success, false for failure
      */
     bool setValue(uint32_t number);
+
+    /**
+     * hide control. 
+     * 
+     * @return bool. 
+     */
+    bool hide(void);
+
+    /**
+     * show control. 
+     * 
+     * @return bool. 
+     */
+    bool show(void);
 };
 /**
  * @}

@@ -243,7 +243,7 @@ void nexLoop(NexTouch *nex_listen_list[])
     {   
         delay(10);
         c = nexSerial.read();
-        
+                
         if (NEX_RET_EVENT_TOUCH_HEAD == c)
         {
             if (nexSerial.available() >= 6)
@@ -260,8 +260,8 @@ void nexLoop(NexTouch *nex_listen_list[])
                     NexTouch::iterate(nex_listen_list, __buffer[1], __buffer[2], (int32_t)__buffer[3]);
                 }
                 
-            }
-        }
+            }         
+        }        
     }
 }
 

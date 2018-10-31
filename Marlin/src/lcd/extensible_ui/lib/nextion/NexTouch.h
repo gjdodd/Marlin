@@ -91,6 +91,7 @@ public: /* methods */
      */
     void attachPop(NexTouchEventCb pop, void *ptr = NULL);
 
+
     /**
      * Detach an callback function. 
      * 

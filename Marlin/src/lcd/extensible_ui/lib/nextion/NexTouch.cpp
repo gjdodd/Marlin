@@ -73,6 +73,9 @@ void NexTouch::iterate(NexTouch **list, uint8_t pid, uint8_t cid, int32_t event)
     {
         return;
     }
+
+    SERIAL_PROTOCOLPAIR("pid:", pid);
+    SERIAL_PROTOCOLPAIR("cid:", cid);
     
     for(i = 0; (e = list[i]) != NULL; i++)
     {
@@ -85,6 +88,7 @@ void NexTouch::iterate(NexTouch **list, uint8_t pid, uint8_t cid, int32_t event)
             }
             else if (NEX_EVENT_POP == event)
             {
+                SERIAL_PROTOCOLPAIR("found:", 1);
                 e->pop();
             }
             

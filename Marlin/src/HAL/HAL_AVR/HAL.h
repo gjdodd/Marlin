@@ -108,7 +108,7 @@ typedef int8_t pin_t;
 
   #if ENABLED(EXTENSIBLE_UI_NEXTION)
 	#if EXTENSIBLE_UI_NEXTION_SERIAL == 0
-	  #define NXTSERIAL Serial
+	  #define NXTSERIAL Serial0
 	#elif EXTENSIBLE_UI_NEXTION_SERIAL == 1
 	  #define NXTSERIAL Serial1
 	#elif EXTENSIBLE_UI_NEXTION_SERIAL == 2
