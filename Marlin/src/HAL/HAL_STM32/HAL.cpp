@@ -21,7 +21,8 @@
  *
  */
 
-#ifdef ARDUINO_ARCH_STM32
+#if defined(ARDUINO_ARCH_STM32) && !defined(STM32GENERIC)
+
 
 // --------------------------------------------------------------------------
 // Includes
@@ -30,6 +31,7 @@
 #include "HAL.h"
 
 #include "../../inc/MarlinConfig.h"
+#include "../shared/Delay.h"
 
 #if ENABLED(EEPROM_EMULATED_WITH_SRAM)
   #if STM32F7xx
@@ -77,9 +79,20 @@ uint16_t HAL_adc_result;
 // Public functions
 // --------------------------------------------------------------------------
 
+
+// Needed for DELAY_NS() / DELAY_US() on CORTEX-M7
+#if (defined(__arm__) || defined(__thumb__)) && __CORTEX_M == 7
+  // HAL pre-initialization task
+  // Force the preinit function to run between the premain() and main() function
+  // of the STM32 arduino core
+  __attribute__((constructor (102)))
+  void HAL_preinit() {
+    enableCycleCounter();
+  }
+#endif
+
 // HAL initialization task
 void HAL_init(void) {
-
   FastIO_init();
 
   #if ENABLED(SDSUPPORT)

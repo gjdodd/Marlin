@@ -41,10 +41,11 @@
  *   location: <http://www.gnu.org/licenses/>.                              *
  ****************************************************************************/
 
-#include "../../Marlin.h"
+#include "../../inc/MarlinConfigPre.h"
 
 #if ENABLED(EXTENSIBLE_UI)
 
+#include "../ultralcd.h"
 #include "../../gcode/queue.h"
 #include "../../module/motion.h"
 #include "../../module/planner.h"
@@ -92,7 +93,8 @@ static struct {
   uint8_t manual_motion : 1;
 } flags;
 
-namespace UI {
+namespace ExtUI {
+
   #ifdef __SAM3X8E__
     /**
      * Implement a special millis() to allow time measurement
@@ -109,7 +111,7 @@ namespace UI {
       // Machine was killed, reinit SysTick so we are able to compute time without ISRs
       if (currTimeHI == 0) {
         // Get the last time the Arduino time computed (from CMSIS) and convert it to SysTick
-        currTimeHI = (uint32_t)((GetTickCount() * (uint64_t)(F_CPU/8000)) >> 24);
+        currTimeHI = (uint32_t)((GetTickCount() * (uint64_t)(F_CPU / 8000)) >> 24);
 
         // Reinit the SysTick timer to maximize its period
         SysTick->LOAD  = SysTick_LOAD_RELOAD_Msk;                    // get the full range for the systick timer
@@ -132,13 +134,7 @@ namespace UI {
       // The ms count is
       return (uint32_t)(currTime / (F_CPU / 8000));
     }
-
-  #else
-
-    // TODO: Implement for AVR
-    uint32_t safe_millis() { return millis(); }
-
-  #endif
+  #endif // __SAM3X8E__
 
   void delay_us(unsigned long us) {
     DELAY_US(us);
@@ -200,7 +196,7 @@ namespace UI {
           max = current_position[axis] + 1000;
 
     // Limit to software endstops, if enabled
-    #if ENABLED(MIN_SOFTWARE_ENDSTOPS) || ENABLED(MAX_SOFTWARE_ENDSTOPS)
+    #if HAS_SOFTWARE_ENDSTOPS
       if (soft_endstops_enabled) switch (axis) {
         case X_AXIS:
           #if ENABLED(MIN_SOFTWARE_ENDSTOP_X)
@@ -227,7 +223,7 @@ namespace UI {
           #endif
         default: break;
       }
-    #endif // MIN_SOFTWARE_ENDSTOPS || MAX_SOFTWARE_ENDSTOPS
+    #endif // HAS_SOFTWARE_ENDSTOPS
 
     // Delta limits XY based on the current offset from center
     // This assumes the center is 0,0
@@ -286,12 +282,14 @@ namespace UI {
   }
 
   void setActiveTool(const extruder_t extruder, bool no_move) {
-    const uint8_t e = extruder - E0;
-    #if DO_SWITCH_EXTRUDER || ENABLED(SWITCHING_NOZZLE) || ENABLED(PARKING_EXTRUDER)
-      if (e != active_extruder)
-        tool_change(e, 0, no_move);
+    #if EXTRUDERS > 1
+      const uint8_t e = extruder - E0;
+      #if DO_SWITCH_EXTRUDER || ENABLED(SWITCHING_NOZZLE) || ENABLED(PARKING_EXTRUDER)
+        if (e != active_extruder)
+          tool_change(e, 0, no_move);
+      #endif
+      active_extruder = e;
     #endif
-    active_extruder = e;
   }
 
   extruder_t getActiveTool() {
@@ -399,6 +397,7 @@ namespace UI {
   #endif
 
   #if ENABLED(JUNCTION_DEVIATION)
+
     float getJunctionDeviation_mm() {
       return planner.junction_deviation_mm;
     }
@@ -407,13 +406,15 @@ namespace UI {
       planner.junction_deviation_mm = clamp(value, 0.01, 0.3);
       planner.recalculate_max_e_jerk();
     }
+
   #else
+
     float getAxisMaxJerk_mm_s(const axis_t axis) {
-        return planner.max_jerk[axis];
+      return planner.max_jerk[axis];
     }
 
     float getAxisMaxJerk_mm_s(const extruder_t extruder) {
-        return planner.max_jerk[E_AXIS];
+      return planner.max_jerk[E_AXIS];
     }
 
     void setAxisMaxJerk_mm_s(const float value, const axis_t axis) {
@@ -450,7 +451,7 @@ namespace UI {
 
     void setZOffset_mm(const float value) {
       const float diff = (value - getZOffset_mm()) / planner.steps_to_mm[Z_AXIS];
-      addZOffset_steps(diff > 0 ? ceil(diff) : floor(diff));
+      addZOffset_steps(diff > 0 ? CEIL(diff) : FLOOR(diff));
     }
 
     void addZOffset_steps(int16_t babystep_increment) {
@@ -529,28 +530,34 @@ namespace UI {
 
   float getFeedrate_percent() { return feedrate_percentage; }
 
-  void enqueueCommands(progmem_str gcode) {
-    enqueue_and_echo_commands_P((PGM_P)gcode);
+  void enqueueCommands_P(PGM_P const gcode) {
+    enqueue_and_echo_commands_P(gcode);
   }
 
   bool isAxisPositionKnown(const axis_t axis) {
     return TEST(axis_known_position, axis);
   }
 
-  progmem_str getFirmwareName_str() {
-    return F("Marlin " SHORT_BUILD_VERSION);
+  PGM_P getFirmwareName_str() {
+    static const char firmware_name[] PROGMEM = "Marlin " SHORT_BUILD_VERSION;
+    return firmware_name;
   }
 
   void setTargetTemp_celsius(float value, const heater_t heater) {
+    constexpr int16_t heater_maxtemp[HOTENDS] = ARRAY_BY_HOTENDS(HEATER_0_MAXTEMP, HEATER_1_MAXTEMP, HEATER_2_MAXTEMP, HEATER_3_MAXTEMP, HEATER_4_MAXTEMP);
+    const int16_t e = heater - H0;
     #if HAS_HEATED_BED
-    if (heater == BED)
-      thermalManager.setTargetBed(clamp(value,0,200));
+      if (heater == BED)
+        thermalManager.setTargetBed(clamp(value, 0, BED_MAXTEMP - 15));
+      else
     #endif
-      thermalManager.setTargetHotend(clamp(value,0,500), heater - H0);
+        thermalManager.setTargetHotend(clamp(value, 0, heater_maxtemp[e] - 15), e);
   }
 
   void setTargetTemp_celsius(float value, const extruder_t extruder) {
-    thermalManager.setTargetHotend(clamp(value,0,500), extruder - E0);
+    constexpr int16_t heater_maxtemp[HOTENDS] = ARRAY_BY_HOTENDS(HEATER_0_MAXTEMP, HEATER_1_MAXTEMP, HEATER_2_MAXTEMP, HEATER_3_MAXTEMP, HEATER_4_MAXTEMP);
+    const int16_t e = extruder - E0;
+    thermalManager.setTargetHotend(clamp(value, 0, heater_maxtemp[e] - 15), e);
   }
 
   void setFan_percent(float value, const fan_t fan) {
@@ -567,19 +574,19 @@ namespace UI {
   }
 
   bool isPrintingFromMediaPaused() {
-    return IFSD(isPrintingFromMedia() && !card.sdprinting, false);
+    return IFSD(isPrintingFromMedia() && !IS_SD_PRINTING(), false);
   }
 
   bool isPrintingFromMedia() {
-    return IFSD(card.cardOK && card.isFileOpen(), false);
+    return IFSD(card.flag.cardOK && card.isFileOpen(), false);
   }
 
   bool isPrinting() {
-    return (planner.movesplanned() || IS_SD_PRINTING() || isPrintingFromMedia());
+    return (planner.movesplanned() || isPrintingFromMedia() || IFSD(IS_SD_PRINTING(), false));
   }
 
   bool isMediaInserted() {
-    return IFSD(IS_SD_INSERTED() && card.cardOK, false);
+    return IFSD(IS_SD_INSERTED() && card.flag.cardOK, false);
   }
 
   void pausePrint() {
@@ -589,27 +596,28 @@ namespace UI {
       #if ENABLED(PARK_HEAD_ON_PAUSE)
         enqueue_and_echo_commands_P(PSTR("M125"));
       #endif
-      UI::onStatusChanged(PSTR(MSG_PRINT_PAUSED));
+      ui.set_status_P(PSTR(MSG_PRINT_PAUSED));
     #endif
   }
 
   void resumePrint() {
     #if ENABLED(SDSUPPORT)
+      ui.set_status_P(PSTR(MSG_FILAMENT_CHANGE_RESUME_1));
       #if ENABLED(PARK_HEAD_ON_PAUSE)
+        wait_for_heatup = wait_for_user = false;
         enqueue_and_echo_commands_P(PSTR("M24"));
       #else
         card.startFileprint();
         print_job_timer.start();
       #endif
-      UI::onStatusChanged(PSTR(MSG_PRINTING));
     #endif
   }
 
   void stopPrint() {
     #if ENABLED(SDSUPPORT)
       wait_for_heatup = wait_for_user = false;
-      card.abort_sd_printing = true;
-      UI::onStatusChanged(PSTR(MSG_PRINT_ABORTED));
+      card.flag.abort_sd_printing = true;
+      ui.set_status_P(PSTR(MSG_PRINT_ABORTED));
     #endif
   }
 
@@ -617,7 +625,7 @@ namespace UI {
 
   void FileList::refresh() { num_files = 0xFFFF; }
 
-  bool FileList::seek(uint16_t pos, bool skip_range_check) {
+  bool FileList::seek(const uint16_t pos, const bool skip_range_check) {
     #if ENABLED(SDSUPPORT)
       if (!skip_range_check && pos > (count() - 1)) return false;
       const uint16_t nr =
@@ -627,12 +635,14 @@ namespace UI {
       pos;
 
       card.getfilename_sorted(nr);
-      return card.filename && card.filename[0] != '\0';
+      return card.filename[0] != '\0';
+    #else
+      return false;
     #endif
   }
 
   const char* FileList::filename() {
-    return IFSD(card.longFilename && card.longFilename[0] ? card.longFilename : card.filename, "");
+    return IFSD(card.longFilename[0] ? card.longFilename : card.filename, "");
   }
 
   const char* FileList::shortFilename() {
@@ -644,7 +654,7 @@ namespace UI {
   }
 
   bool FileList::isDir() {
-    return IFSD(card.filenameIsDir, false);
+    return IFSD(card.flag.filenameIsDir, false);
   }
 
   uint16_t FileList::count() {
@@ -667,25 +677,25 @@ namespace UI {
     #endif
   }
 
-  void FileList::changeDir(const char *dirname) {
+  void FileList::changeDir(const char * const dirname) {
     #if ENABLED(SDSUPPORT)
       card.chdir(dirname);
       num_files = 0xFFFF;
     #endif
   }
 
-} // namespace UI
+} // namespace ExtUI
 
 // At the moment, we piggy-back off the ultralcd calls, but this could be cleaned up in the future
 
-void lcd_init() {
+void MarlinUI::init() {
   #if ENABLED(SDSUPPORT) && PIN_EXISTS(SD_DETECT)
     SET_INPUT_PULLUP(SD_DETECT_PIN);
   #endif
-  UI::onStartup();
+  ExtUI::onStartup();
 }
 
-void lcd_update() {
+void MarlinUI::update() {
   #if ENABLED(SDSUPPORT)
     static bool last_sd_status;
     const bool sd_status = IS_SD_INSERTED();
@@ -693,63 +703,26 @@ void lcd_update() {
       last_sd_status = sd_status;
       if (sd_status) {
         card.initsd();
-        if (card.cardOK)
-          UI::onMediaInserted();
+        if (card.flag.cardOK)
+          ExtUI::onMediaInserted();
         else
-          UI::onMediaError();
+          ExtUI::onMediaError();
       }
       else {
-        const bool ok = card.cardOK;
+        const bool ok = card.flag.cardOK;
         card.release();
-        if (ok) UI::onMediaRemoved();
+        if (ok) ExtUI::onMediaRemoved();
       }
     }
   #endif // SDSUPPORT
-  UI::_processManualMoveToDestination();
-  UI::onIdle();
+  ExtUI::_processManualMoveToDestination();
+  ExtUI::onIdle();
 }
 
-bool lcd_hasstatus() { return true; }
-bool lcd_detected() { return true; }
-void lcd_reset_alert_level() { }
-void lcd_refresh() { }
-void lcd_setstatus(const char * const message, const bool persist /* = false */) { UI::onStatusChanged(message); }
-void lcd_setstatusPGM(const char * const message, int8_t level /* = 0 */)        { UI::onStatusChanged((progmem_str)message); }
-void lcd_setalertstatusPGM(const char * const message)                           { lcd_setstatusPGM(message, 0); }
-
-void lcd_reset_status() {
-  static const char paused[] PROGMEM = MSG_PRINT_PAUSED;
-  static const char printing[] PROGMEM = MSG_PRINTING;
-  static const char welcome[] PROGMEM = WELCOME_MSG;
-  PGM_P msg;
-  if (print_job_timer.isPaused())
-    msg = paused;
-  #if ENABLED(SDSUPPORT)
-    else if (card.sdprinting)
-      return lcd_setstatus(card.longest_filename(), true);
-  #endif
-  else if (print_job_timer.isRunning())
-    msg = printing;
-  else
-    msg = welcome;
-
-  lcd_setstatusPGM(msg, -1);
-}
-
-void lcd_status_printf_P(const uint8_t level, const char * const fmt, ...) {
-  char buff[64];
-  va_list args;
-  va_start(args, fmt);
-  vsnprintf_P(buff, sizeof(buff), fmt, args);
-  va_end(args);
-  buff[63] = '\0';
-  UI::onStatusChanged(buff);
-}
-
-void kill_screen(PGM_P msg) {
+void MarlinUI::kill_screen(PGM_P const msg) {
   if (!flags.printer_killed) {
     flags.printer_killed = true;
-    UI::onPrinterKilled(msg);
+    ExtUI::onPrinterKilled(msg);
   }
 }
 

@@ -25,12 +25,21 @@
 //
 
 #ifndef __AVR_ATmega2560__
-  #error "Oops!  Make sure you have 'FYSETC_F6' selected from the 'Tools -> Boards' menu."
+  #error "Oops! Select 'FYSETC F6' in 'Tools > Board.'"
 #endif
 
-#ifndef BOARD_NAME
-  #define BOARD_NAME "FYSETC_F6_13"
-#endif
+#define BOARD_NAME "FYSETC F6 1.3"
+
+#define RESET_PIN          30
+#define SPI_FLASH_CS       83
+
+//
+// Servos
+//
+#define SERVO0_PIN         13
+#define SERVO1_PIN         11    // (PS_ON_PIN)
+#define SERVO2_PIN         10    // (FIL_RUNOUT_PIN)
+#define SERVO3_PIN          4    // (RGB_LED_G_PIN)
 
 //
 // Limit Switches
@@ -43,7 +52,7 @@
 #define Z_MAX_PIN           9
 
 #ifndef FIL_RUNOUT_PIN
-  #define FIL_RUNOUT_PIN   10
+  #define FIL_RUNOUT_PIN   SERVO2_PIN
 #endif
 
 //
@@ -103,12 +112,6 @@
 // the jumper next to the limit switch socket when using sensorless homing.
 //
 
-#define X_TMC2130_DIAG     -1
-#define Y_TMC2130_DIAG     -1
-#define Z_TMC2130_DIAG     -1
-#define E0_TMC2130_DIAG    -1
-#define E1_TMC2130_DIAG    -1
-#define E2_TMC2130_DIAG    -1
 
 #if HAS_DRIVER(TMC2208)
   // Software serial
@@ -123,7 +126,7 @@
   #define E1_SERIAL_RX_PIN 80
   #define E1_SERIAL_TX_PIN 81
   #define E2_SERIAL_RX_PIN 22
-  #define E2_SERIAL_TX_PIN 83
+  #define E2_SERIAL_TX_PIN 82
 #endif
 
 //
@@ -158,14 +161,14 @@
 #define KILL_PIN           41
 
 #ifndef PS_ON_PIN
-  #define PS_ON_PIN        11   // Servos pin
+  #define PS_ON_PIN        SERVO1_PIN
 #endif
 
 #ifndef RGB_LED_R_PIN
   #define RGB_LED_R_PIN     3
 #endif
 #ifndef RGB_LED_G_PIN
-  #define RGB_LED_G_PIN     4
+  #define RGB_LED_G_PIN    SERVO3_PIN
 #endif
 #ifndef RGB_LED_B_PIN
   #define RGB_LED_B_PIN     9
@@ -191,4 +194,9 @@
   #define BTN_EN1          31
   #define BTN_EN2          33
   #define BTN_ENC          35
+
+  #if ENABLED(MKS_MINI_12864)
+    #define DOGLCD_A0      27
+    #define DOGLCD_CS      25
+  #endif
 #endif
