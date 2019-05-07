@@ -205,7 +205,7 @@
   #define MOSI_PIN         P0_09
   #define SS_PIN           P0_28   // Chip select for SD card used by Marlin
   #define ONBOARD_SD_CS    P0_06   // Chip select for "System" SD card
-
+  #define SD_DETECT_PIN  P0_27
 #elif ENABLED(LPC_SD_ONBOARD)
 
   // The external SD card is not used. Hardware SPI is used to access the card.
