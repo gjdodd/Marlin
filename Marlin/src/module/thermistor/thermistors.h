@@ -1,6 +1,6 @@
 /**
  * Marlin 3D Printer Firmware
- * Copyright (C) 2016 MarlinFirmware [https://github.com/MarlinFirmware/Marlin]
+ * Copyright (C) 2019 MarlinFirmware [https://github.com/MarlinFirmware/Marlin]
  *
  * Based on Sprinter and grbl.
  * Copyright (C) 2011 Camiel Gubbels / Erik van der Zalm
@@ -26,7 +26,7 @@
 #define OVERSAMPLENR 16
 #define OV(N) int16_t((N) * (OVERSAMPLENR))
 
-#define ANY_THERMISTOR_IS(n) (THERMISTORHEATER_0 == n || THERMISTORHEATER_1 == n || THERMISTORHEATER_2 == n || THERMISTORHEATER_3 == n || THERMISTORHEATER_4 == n || THERMISTORBED == n || THERMISTORCHAMBER == n)
+#define ANY_THERMISTOR_IS(n) (THERMISTOR_HEATER_0 == n || THERMISTOR_HEATER_1 == n || THERMISTOR_HEATER_2 == n || THERMISTOR_HEATER_3 == n || THERMISTOR_HEATER_4 == n || THERMISTOR_HEATER_5 == n || THERMISTORBED == n || THERMISTORCHAMBER == n)
 
 // Pt1000 and Pt100 handling
 //
@@ -104,6 +104,9 @@
 #if ANY_THERMISTOR_IS(66) // beta25 = 4500 K, R25 = 2.5 MOhm, Pull-up = 4.7 kOhm, "DyzeDesign 500 °C Thermistor"
   #include "thermistor_66.h"
 #endif
+#if ANY_THERMISTOR_IS(67) // R25 = 500 KOhm, beta25 = 3800 K, 4.7 kOhm pull-up, SliceEngineering 450 °C Thermistor
+  #include "thermistor_67.h"
+#endif
 #if ANY_THERMISTOR_IS(12) // beta25 = 4700 K, R25 = 100 kOhm, Pull-up = 4.7 kOhm, "Personal calibration for Makibox hot bed"
   #include "thermistor_12.h"
 #endif
@@ -138,8 +141,8 @@
 #define _TT_NAME(_N) temptable_ ## _N
 #define TT_NAME(_N) _TT_NAME(_N)
 
-#if THERMISTORHEATER_0
-  #define HEATER_0_TEMPTABLE TT_NAME(THERMISTORHEATER_0)
+#if THERMISTOR_HEATER_0
+  #define HEATER_0_TEMPTABLE TT_NAME(THERMISTOR_HEATER_0)
   #define HEATER_0_TEMPTABLE_LEN COUNT(HEATER_0_TEMPTABLE)
 #elif defined(HEATER_0_USES_THERMISTOR)
   #error "No heater 0 thermistor table specified"
@@ -148,8 +151,8 @@
   #define HEATER_0_TEMPTABLE_LEN 0
 #endif
 
-#if THERMISTORHEATER_1
-  #define HEATER_1_TEMPTABLE TT_NAME(THERMISTORHEATER_1)
+#if THERMISTOR_HEATER_1
+  #define HEATER_1_TEMPTABLE TT_NAME(THERMISTOR_HEATER_1)
   #define HEATER_1_TEMPTABLE_LEN COUNT(HEATER_1_TEMPTABLE)
 #elif defined(HEATER_1_USES_THERMISTOR)
   #error "No heater 1 thermistor table specified"
@@ -158,8 +161,8 @@
   #define HEATER_1_TEMPTABLE_LEN 0
 #endif
 
-#if THERMISTORHEATER_2
-  #define HEATER_2_TEMPTABLE TT_NAME(THERMISTORHEATER_2)
+#if THERMISTOR_HEATER_2
+  #define HEATER_2_TEMPTABLE TT_NAME(THERMISTOR_HEATER_2)
   #define HEATER_2_TEMPTABLE_LEN COUNT(HEATER_2_TEMPTABLE)
 #elif defined(HEATER_2_USES_THERMISTOR)
   #error "No heater 2 thermistor table specified"
@@ -168,8 +171,8 @@
   #define HEATER_2_TEMPTABLE_LEN 0
 #endif
 
-#if THERMISTORHEATER_3
-  #define HEATER_3_TEMPTABLE TT_NAME(THERMISTORHEATER_3)
+#if THERMISTOR_HEATER_3
+  #define HEATER_3_TEMPTABLE TT_NAME(THERMISTOR_HEATER_3)
   #define HEATER_3_TEMPTABLE_LEN COUNT(HEATER_3_TEMPTABLE)
 #elif defined(HEATER_3_USES_THERMISTOR)
   #error "No heater 3 thermistor table specified"
@@ -178,14 +181,24 @@
   #define HEATER_3_TEMPTABLE_LEN 0
 #endif
 
-#if THERMISTORHEATER_4
-  #define HEATER_4_TEMPTABLE TT_NAME(THERMISTORHEATER_4)
+#if THERMISTOR_HEATER_4
+  #define HEATER_4_TEMPTABLE TT_NAME(THERMISTOR_HEATER_4)
   #define HEATER_4_TEMPTABLE_LEN COUNT(HEATER_4_TEMPTABLE)
 #elif defined(HEATER_4_USES_THERMISTOR)
   #error "No heater 4 thermistor table specified"
 #else
   #define HEATER_4_TEMPTABLE NULL
   #define HEATER_4_TEMPTABLE_LEN 0
+#endif
+
+#if THERMISTOR_HEATER_5
+  #define HEATER_5_TEMPTABLE TT_NAME(THERMISTOR_HEATER_5)
+  #define HEATER_5_TEMPTABLE_LEN COUNT(HEATER_5_TEMPTABLE)
+#elif defined(HEATER_5_USES_THERMISTOR)
+  #error "No heater 5 thermistor table specified"
+#else
+  #define HEATER_5_TEMPTABLE NULL
+  #define HEATER_5_TEMPTABLE_LEN 0
 #endif
 
 #ifdef THERMISTORBED
@@ -257,6 +270,15 @@ static_assert(HEATER_0_TEMPTABLE_LEN < 256 && HEATER_1_TEMPTABLE_LEN < 256 && HE
   #else
     #define HEATER_4_RAW_HI_TEMP 16383
     #define HEATER_4_RAW_LO_TEMP 0
+  #endif
+#endif
+#ifndef HEATER_5_RAW_HI_TEMP
+  #ifdef HEATER_5_USES_THERMISTOR
+    #define HEATER_5_RAW_HI_TEMP 0
+    #define HEATER_5_RAW_LO_TEMP 16383
+  #else
+    #define HEATER_5_RAW_HI_TEMP 16383
+    #define HEATER_5_RAW_LO_TEMP 0
   #endif
 #endif
 #ifndef HEATER_BED_RAW_HI_TEMP

@@ -1,7 +1,7 @@
 /**
  * Marlin 3D Printer Firmware
  *
- * Copyright (C) 2016 MarlinFirmware [https://github.com/MarlinFirmware/Marlin]
+ * Copyright (C) 2019 MarlinFirmware [https://github.com/MarlinFirmware/Marlin]
  * Copyright (c) 2016 Bob Cousins bobcousins42@googlemail.com
  * Copyright (c) 2015-2016 Nico Tonnhofer wurstnase.reprap@gmail.com
  *
@@ -29,15 +29,14 @@
 
 #define CPU_32_BIT
 
-#include <stdint.h>
-
-#include <Arduino.h>
-
+#include "../shared/Marduino.h"
 #include "../shared/math_32bit.h"
 #include "../shared/HAL_SPI.h"
 #include "fastio_Due.h"
 #include "watchdog_Due.h"
 #include "HAL_timers_Due.h"
+
+#include <stdint.h>
 
 // Serial ports
 #if !WITHIN(SERIAL_PORT, -1, 3)
@@ -112,10 +111,8 @@ uint8_t HAL_get_reset_source(void); // get reset reason
 
 // Write single byte to specified SPI channel
 void spiSend(uint32_t chan, byte b);
-
 // Write buffer to specified SPI channel
 void spiSend(uint32_t chan, const uint8_t* buf, size_t n);
-
 // Read single byte from specified SPI channel
 uint8_t spiRec(uint32_t chan);
 

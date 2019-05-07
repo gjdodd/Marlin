@@ -1,6 +1,6 @@
 /**
  * Marlin 3D Printer Firmware
- * Copyright (C) 2016 MarlinFirmware [https://github.com/MarlinFirmware/Marlin]
+ * Copyright (C) 2019 MarlinFirmware [https://github.com/MarlinFirmware/Marlin]
  *
  * Based on Sprinter and grbl.
  * Copyright (C) 2011 Camiel Gubbels / Erik van der Zalm
@@ -76,17 +76,23 @@
 #define Z_DIR_PIN          56
 #define Z_ENABLE_PIN       62
 
-#define E0_STEP_PIN        23
-#define E0_DIR_PIN         22
-#define E0_ENABLE_PIN      24
+#ifndef E0_STEP_PIN
+  #define E0_STEP_PIN      23
+  #define E0_DIR_PIN       22
+  #define E0_ENABLE_PIN    24
+#endif
 
-#define E1_STEP_PIN        26
-#define E1_DIR_PIN         25
-#define E1_ENABLE_PIN      27
+#ifndef E1_STEP_PIN
+  #define E1_STEP_PIN      26
+  #define E1_DIR_PIN       25
+  #define E1_ENABLE_PIN    27
+#endif
 
-#define E2_STEP_PIN        29
-#define E2_DIR_PIN         28
-#define E2_ENABLE_PIN      39
+#if E1_STEP_PIN != 29
+  #define E2_STEP_PIN      29
+  #define E2_DIR_PIN       28
+  #define E2_ENABLE_PIN    39
+#endif
 
 //
 // Temperature Sensors
@@ -140,7 +146,6 @@
 //
 // Misc. Functions
 //
-#define SDSS               53
 #define LED_PIN            13
 #define PS_ON_PIN          45
 #define KILL_PIN           46
@@ -152,8 +157,8 @@
 #ifndef SPINDLE_LASER_PWM_PIN
   #define SPINDLE_LASER_PWM_PIN 4   // MUST BE HARDWARE PWM. Pin 4 interrupts OC0* and OC1* always in use?
 #endif
-#ifndef SPINDLE_LASER_ENABLE_PIN
-  #define SPINDLE_LASER_ENABLE_PIN 14   // Pin should have a pullup!
+#ifndef SPINDLE_LASER_ENA_PIN
+  #define SPINDLE_LASER_ENA_PIN    14   // Pin should have a pullup!
 #endif
 #ifndef SPINDLE_DIR_PIN
   #define SPINDLE_DIR_PIN  15
@@ -162,14 +167,7 @@
 //
 // LCD / Controller
 //
-#define SD_DETECT_PIN      49
-#define BEEPER_PIN         44
-#define LCD_PINS_D7        40
-#define BTN_EN1            11
-#define BTN_EN2            12
-#define BTN_ENC            43
-
-#if ENABLED(MKS_12864OLED) || ENABLED(MKS_12864OLED_SSD1306)
+#if EITHER(MKS_12864OLED, MKS_12864OLED_SSD1306)
   #define LCD_PINS_DC      38   // Set as output on init
   #define LCD_PINS_RS      41   // Pull low for 1s to init
   // DOGM SPI LCD Support
@@ -177,10 +175,54 @@
   #define DOGLCD_MOSI      42
   #define DOGLCD_SCK       18
   #define DOGLCD_A0        LCD_PINS_DC
+#elif ENABLED(FYSETC_MINI_12864)
+  #define DOGLCD_CS        42
+  #define DOGLCD_A0        19
+  #define DOGLCD_MOSI      51
+  #define DOGLCD_SCK       52
+
+  //#define FORCE_SOFT_SPI    // Use this if default of hardware SPI causes display problems
+                              //   results in LCD soft SPI mode 3, SD soft SPI mode 0
+
+  #define LCD_RESET_PIN  18   // Must be high or open for LCD to operate normally.
+
+  #if EITHER(FYSETC_MINI_12864_1_2, FYSETC_MINI_12864_2_0)
+    #ifndef RGB_LED_R_PIN
+      #define RGB_LED_R_PIN 41
+    #endif
+    #ifndef RGB_LED_G_PIN
+      #define RGB_LED_G_PIN 38
+    #endif
+    #ifndef RGB_LED_B_PIN
+      #define RGB_LED_B_PIN 40
+    #endif
+  #elif ENABLED(FYSETC_MINI_12864_2_1)
+    #define NEOPIXEL_PIN   25
+  #endif
+
 #else
   #define LCD_PINS_RS      19
   #define LCD_PINS_ENABLE  42
   #define LCD_PINS_D4      18
   #define LCD_PINS_D5      38
   #define LCD_PINS_D6      41
+#endif
+
+#define LCD_PINS_D7        40
+
+//
+// Beeper, SD Card, Encoder
+//
+#define BEEPER_PIN         44
+
+#if ENABLED(SDSUPPORT)
+  #define SDPOWER          -1
+  #define SDSS             53
+  #define SD_DETECT_PIN    49
+#endif
+
+#if ENABLED(NEWPANEL)
+  #define BTN_EN1          11
+  #define BTN_EN2          12
+  #define BTN_ENC          43
 #endif

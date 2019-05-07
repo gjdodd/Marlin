@@ -1,7 +1,7 @@
 /**
  * Marlin 3D Printer Firmware
  *
- * Copyright (C) 2016 MarlinFirmware [https://github.com/MarlinFirmware/Marlin]
+ * Copyright (C) 2019 MarlinFirmware [https://github.com/MarlinFirmware/Marlin]
  * Copyright (c) 2016 Bob Cousins bobcousins42@googlemail.com
  * Copyright (c) 2015-2016 Nico Tonnhofer wurstnase.reprap@gmail.com
  *
@@ -28,14 +28,7 @@
 
 #define CPU_32_BIT
 
-// _BV is re-defined in Arduino.h
-#undef _BV
-
-#include <Arduino.h>
-
-// Redefine sq macro defined by teensy3/wiring.h
-#undef sq
-#define sq(x) ((x)*(x))
+#include "../shared/Marduino.h"
 
 #include "../math_32bit.h"
 #include "../HAL_SPI.h"

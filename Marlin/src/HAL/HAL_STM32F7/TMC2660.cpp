@@ -127,7 +127,7 @@ uint8_t current_scaling = 0;
  * dir_pin - the pin where the direction pin is connected
  * step_pin - the pin where the step pin is connected
  */
-TMC26XStepper::TMC26XStepper(int16_t number_of_steps, int16_t cs_pin, int16_t dir_pin, int16_t step_pin, uint16_t current, uint16_t resistor) {
+TMC26XStepper::TMC26XStepper(const int16_t in_steps, int16_t cs_pin, int16_t dir_pin, int16_t step_pin, uint16_t current, uint16_t resistor) {
   // We are not started yet
   started = false;
 
@@ -165,7 +165,7 @@ TMC26XStepper::TMC26XStepper(int16_t number_of_steps, int16_t cs_pin, int16_t di
   // Set a nice microstepping value
   setMicrosteps(DEFAULT_MICROSTEPPING_VALUE);
   // Save the number of steps
-  this->number_of_steps = number_of_steps;
+  number_of_steps = in_steps;
 }
 
 
@@ -176,7 +176,7 @@ TMC26XStepper::TMC26XStepper(int16_t number_of_steps, int16_t cs_pin, int16_t di
 void TMC26XStepper::start() {
 
   #ifdef TMC_DEBUG1
-    SERIAL_ECHOPGM("\n  TMC26X stepper library  \n");
+    SERIAL_ECHOLNPGM("\n  TMC26X stepper library");
     SERIAL_ECHOPAIR("\n  CS pin: ", cs_pin);
     SERIAL_ECHOPAIR("\n  DIR pin: ", dir_pin);
     SERIAL_ECHOPAIR("\n  STEP pin: ", step_pin);
@@ -191,9 +191,9 @@ void TMC26XStepper::start() {
   pinMode(dir_pin, OUTPUT);
   pinMode(cs_pin, OUTPUT);
   //SET_OUTPUT(STEPPER_ENABLE_PIN);
-  digitalWrite(step_pin, LOW);
-  digitalWrite(dir_pin, LOW);
-  digitalWrite(cs_pin, HIGH);
+  extDigitalWrite(step_pin, LOW);
+  extDigitalWrite(dir_pin, LOW);
+  extDigitalWrite(cs_pin, HIGH);
 
   STEPPER_SPI.begin();
   STEPPER_SPI.beginTransaction(SPISettings(4000000, MSBFIRST, SPI_MODE3));
@@ -222,7 +222,6 @@ void TMC26XStepper::setSpeed(uint16_t whatSpeed) {
   this->speed = whatSpeed;
   this->step_delay = 60UL * sq(1000UL) / ((uint32_t)this->number_of_steps * (uint32_t)whatSpeed * (uint32_t)this->microsteps);
   #ifdef TMC_DEBUG0 // crashes
-    //SERIAL_PRINTF("Step delay in micros: ");
     SERIAL_ECHOPAIR("\nStep delay in micros: ", this->step_delay);
   #endif
   // Update the next step time
@@ -261,10 +260,10 @@ char TMC26XStepper::move(void) {
       // increment or decrement the step number,
       // depending on direction:
       if (this->direction == 1)
-        digitalWrite(step_pin, HIGH);
+        extDigitalWrite(step_pin, HIGH);
       else {
-        digitalWrite(dir_pin, HIGH);
-        digitalWrite(step_pin, HIGH);
+        extDigitalWrite(dir_pin, HIGH);
+        extDigitalWrite(step_pin, HIGH);
       }
       // get the timeStamp of when you stepped:
       this->last_step_time = time;
@@ -272,8 +271,8 @@ char TMC26XStepper::move(void) {
       // decrement the steps left:
       steps_left--;
       //disable the step & dir pins
-      digitalWrite(step_pin, LOW);
-      digitalWrite(dir_pin, LOW);
+      extDigitalWrite(step_pin, LOW);
+      extDigitalWrite(dir_pin, LOW);
     }
     return -1;
   }
@@ -315,10 +314,8 @@ void TMC26XStepper::setCurrent(uint16_t current) {
     // and recalculate the current setting
     current_scaling = (byte)((resistor_value * mASetting * 32.0 / (0.165 * sq(1000.0))) - 0.5); //theoretically - 1.0 for better rounding it is 0.5
     #ifdef TMC_DEBUG0 // crashes
-        //SERIAL_PRINTF("CS (Vsense=1): ");
         SERIAL_ECHOPAIR("\nCS (Vsense=1): ",current_scaling);
       } else {
-        //SERIAL_PRINTF("CS: ");
         SERIAL_ECHOPAIR("\nCS: ", current_scaling);
     #endif
   }
@@ -389,52 +386,28 @@ char TMC26XStepper::getStallGuardFilter(void) {
  * any value in between will be mapped to the next smaller value
  * 0 and 1 set the motor in full step mode
  */
-void TMC26XStepper::setMicrosteps(int16_t number_of_steps) {
-  long setting_pattern;
-  //poor mans log
-  if (number_of_steps >= 256) {
-    setting_pattern = 0;
-    microsteps = 256;
-  }
-  else if (number_of_steps >= 128) {
-    setting_pattern = 1;
-    microsteps = 128;
-  }
-  else if (number_of_steps >= 64) {
-    setting_pattern = 2;
-    microsteps = 64;
-  }
-  else if (number_of_steps >= 32) {
-    setting_pattern = 3;
-    microsteps = 32;
-  }
-  else if (number_of_steps >= 16) {
-    setting_pattern = 4;
-    microsteps = 16;
-  }
-  else if (number_of_steps >= 8) {
-    setting_pattern = 5;
-    microsteps = 8;
-  }
-  else if (number_of_steps >= 4) {
-    setting_pattern = 6;
-    microsteps = 4;
-  }
-  else if (number_of_steps >= 2) {
-    setting_pattern = 7;
-    microsteps = 2;
-    //1 and 0 lead to full step
-  }
-  else if (number_of_steps <= 1) {
-    setting_pattern = 8;
-    microsteps = 1;
-  }
+void TMC26XStepper::setMicrosteps(const int16_t in_steps) {
+  uint16_t setting_pattern;
+
+       if (in_steps >= 256) setting_pattern = 0;
+  else if (in_steps >= 128) setting_pattern = 1;
+  else if (in_steps >=  64) setting_pattern = 2;
+  else if (in_steps >=  32) setting_pattern = 3;
+  else if (in_steps >=  16) setting_pattern = 4;
+  else if (in_steps >=   8) setting_pattern = 5;
+  else if (in_steps >=   4) setting_pattern = 6;
+  else if (in_steps >=   2) setting_pattern = 7;
+  else if (in_steps <=   1) setting_pattern = 8; // 1 and 0 lead to full step
+
+  microsteps = _BV(8 - setting_pattern);
+
   #ifdef TMC_DEBUG0 // crashes
-    //SERIAL_PRINTF("Microstepping: ");
     SERIAL_ECHOPAIR("\n Microstepping: ", microsteps);
   #endif
+
   // Delete the old value
-  this->driver_control_register_value &= 0xFFFF0UL;
+  this->driver_control_register_value &= 0x000FFFF0UL;
+
   // Set the new value
   this->driver_control_register_value |= setting_pattern;
 
@@ -635,7 +608,6 @@ void TMC26XStepper::setCoolStepConfiguration(
                           | (((uint32_t)lower_current_limit) << 15)
                           | COOL_STEP_REGISTER; // Register signature
 
-  //SERIAL_PRINTFln(cool_step_register_value,HEX);
   if (started) send262(cool_step_register_value);
 }
 
@@ -853,18 +825,14 @@ void TMC26XStepper::debugLastStatus() {
       uint32_t readout_config = driver_configuration_register_value & READ_SELECTION_PATTERN;
       const int16_t value = getReadoutValue();
       if (readout_config == READ_MICROSTEP_POSTION) {
-        //SERIAL_PRINTF("Microstep postion phase A: ");
-        SERIAL_ECHOPAIR("\n  Microstep postion phase A: ", value);
+        SERIAL_ECHOPAIR("\n  Microstep position phase A: ", value);
       }
       else if (readout_config == READ_STALL_GUARD_READING) {
-        //SERIAL_PRINTF("Stall Guard value:");
         SERIAL_ECHOPAIR("\n  Stall Guard value:", value);
       }
       else if (readout_config == READ_STALL_GUARD_AND_COOL_STEP) {
         int16_t stallGuard = value & 0xF, current = value & 0x1F0;
-        //SERIAL_PRINTF("Approx Stall Guard: ");
         SERIAL_ECHOPAIR("\n  Approx Stall Guard: ", stallGuard);
-        //SERIAL_PRINTF("Current level");
         SERIAL_ECHOPAIR("\n  Current level", current);
       }
     }
@@ -887,7 +855,7 @@ inline void TMC26XStepper::send262(uint32_t datagram) {
   //}
 
   //select the TMC driver
-  digitalWrite(cs_pin, LOW);
+  extDigitalWrite(cs_pin, LOW);
 
   //ensure that only valid bist are set (0-19)
   //datagram &=REGISTER_BIT_PATTERN;
@@ -916,7 +884,7 @@ inline void TMC26XStepper::send262(uint32_t datagram) {
   #endif
 
   //deselect the TMC chip
-  digitalWrite(cs_pin, HIGH);
+  extDigitalWrite(cs_pin, HIGH);
 
   //restore the previous SPI mode if neccessary
   //if the mode is not correct set it to mode 3
