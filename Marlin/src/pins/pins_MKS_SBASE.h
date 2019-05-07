@@ -164,8 +164,6 @@
   #define LPC_SD_ONBOARD
 #endif
 
-#define LPC_SD_LCD          // Marlin uses the SD drive attached to the LCD
-//#define LPC_SD_ONBOARD        // Marlin uses the SD drive attached to the control board
 #if ENABLED(LPC_SD_CUSTOM_CABLE)
 
   /**
