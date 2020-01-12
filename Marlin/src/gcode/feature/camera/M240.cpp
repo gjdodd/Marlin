@@ -62,7 +62,7 @@
 #endif
 
 #if PIN_EXISTS(PHOTOGRAPH)
-  #if ENABLED(PHOTO_GCODE)
+  #if ENABLED(PHOTO_NIKON)
     inline void pulse(unsigned long duration, uint8_t state) {  
     if(state == HIGH)
     {
@@ -81,7 +81,7 @@
   }
   
   inline void spin_photo_pin() {     
-    #if ENABLED(PHOTO_GCODE)
+    #if ENABLED(PHOTO_NIKON)
       unsigned long sequence[] = PHOTO_PULSES_MS;
       int seq_l;
 
