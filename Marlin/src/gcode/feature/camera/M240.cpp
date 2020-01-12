@@ -69,9 +69,9 @@
       unsigned long stop = micros() + duration;  
       while( micros() < stop ) {
           digitalWrite( PHOTOGRAPH_PIN, HIGH );
-          delayMicroseconds(PHOTO_PULES_DELAY);
+          delayMicroseconds(PHOTO_PULES_DELAY_US);
           digitalWrite( PHOTOGRAPH_PIN, LOW );
-          delayMicroseconds(PHOTO_PULES_DELAY);
+          delayMicroseconds(PHOTO_PULES_DELAY_US);
       }
     }
     else
@@ -81,20 +81,15 @@
   }
   
   inline void spin_photo_pin() {     
-    #if ENABLED(PHOTO_NIKON)
-      unsigned long sequence[] = PHOTO_PULSES_MS;
-      int seq_l;
+    unsigned long sequence[] = PHOTO_PULSES_US;
+    int seq_l;
 
-      seq_l = sizeof(sequence)/sizeof(unsigned long);
+    seq_l = sizeof(sequence)/sizeof(unsigned long);
 
-      int i;
-		  for(i=0;i<seq_l;i++) {
-  			pulse(sequence[i], i%2==0);
-	  	}
-    #else
-      for (uint8_t i = NUM_PULSES; i--;) tweak_photo_pin();     
-    #endif
-    
+    int i;
+    for(i=0;i<seq_l;i++) {
+      pulse(sequence[i], i%2==0);
+    }    
   }
   #else
     constexpr uint8_t NUM_PULSES = 16;

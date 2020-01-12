@@ -78,22 +78,13 @@
 #define Z_DIR_PIN          P0_20
 #define Z_ENABLE_PIN       P0_19
 
-//#define E0_STEP_PIN        P2_03
-//#define E0_DIR_PIN         P0_22
-//#define E0_ENABLE_PIN      P0_21
+#define E0_STEP_PIN        P2_03
+#define E0_DIR_PIN         P0_22
+#define E0_ENABLE_PIN      P0_21
 
-//#define E1_STEP_PIN        P2_08
-//#define E1_DIR_PIN         P2_13
-//#define E1_ENABLE_PIN      P4_29
-
-
-#define E1_STEP_PIN        P2_03
-#define E1_DIR_PIN         P0_22
-#define E1_ENABLE_PIN      P0_21
-
-#define E0_STEP_PIN        P2_08
-#define E0_DIR_PIN         P2_13
-#define E0_ENABLE_PIN      P4_29
+#define E1_STEP_PIN        P2_08
+#define E1_DIR_PIN         P2_13
+#define E1_ENABLE_PIN      P4_29
 
 //
 // Temperature Sensors
