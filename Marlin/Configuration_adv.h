@@ -2364,16 +2364,16 @@
  * Add the M240 G-code to take a photo.
  * The photo can be triggered by a digital pin or a physical movement.
  */
-//#define PHOTO_GCODE
+#define PHOTO_GCODE
 #if ENABLED(PHOTO_GCODE)
   // A position to move to (and raise Z) before taking the photo
-  //#define PHOTO_POSITION { X_MAX_POS - 5, Y_MAX_POS, 0 }  // { xpos, ypos, zraise } (M240 X Y Z)
-  //#define PHOTO_DELAY_MS   100                            // (ms) Duration to pause before moving back (M240 P)
+  #define PHOTO_POSITION { X_MAX_POS - 5, Y_MAX_POS, 0 }  // { xpos, ypos, zraise } (M240 X Y Z)
+  #define PHOTO_DELAY_MS   100                            // (ms) Duration to pause before moving back (M240 P)
   //#define PHOTO_RETRACT_MM   6.5                          // (mm) E retract/recover for the photo move (M240 R S)
 
   // Canon RC-1 or homebrew digital camera trigger
   // Data from: http://www.doc-diy.net/photo/rc-1_hacked/
-  //#define PHOTOGRAPH_PIN 23
+  #define PHOTOGRAPH_PIN 55
 
   // Canon Hack Development Kit
   // http://captain-slow.dk/2014/03/09/3d-printing-timelapses/
@@ -2384,6 +2384,25 @@
 
   // Duration to hold the switch or keep CHDK_PIN high
   //#define PHOTO_SWITCH_MS   50 // (ms) (M240 D)
+
+  #define PHOTO_NIKON
+  // Nikon
+  // Data from: https://www.christidis.info/index.php/personal-projects/arduino-nikon-infrared-command-code
+  // IR Wiring: https://github.com/outofjungle/NikonRemote/blob/master/NikonRemote.cpp
+  #if ENABLED(PHOTO_GCODE)
+    // Pulses, might need tweaking depending on board
+    // make sure to use a PHOTOGRAPH_PIN which can rise and fall quick enough. 
+    // On MKS SBase, temp sensor pin was too slow used P1.23 on J8
+    // pin requires to be running at 48.4khz
+
+    // how long the 48.4khz pulses last going high then low {HIGH,LOW,HIGH,LOW,...}
+    #define PHOTO_PULSES_MS {2000,27850,400,1580,400,3580,400}  
+
+    // Delay during HIGH pulses to create the 48.4khz frequency HIGH delay LOW DELAY repeat for the pulse duration
+    #define PHOTO_PULES_DELAY 13
+  #endif
+  
+
 #endif
 
 /**
