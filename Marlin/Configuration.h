@@ -123,7 +123,7 @@
  *
  * :[2400, 9600, 19200, 38400, 57600, 115200, 250000, 500000, 1000000]
  */
-#define BAUDRATE 250000
+#define BAUDRATE 115200
 
 // Enable the Bluetooth serial interface on AT90USB devices
 //#define BLUETOOTH
@@ -2069,8 +2069,9 @@
 // Third-party or vendor-customized controller interfaces.
 // Sources should be installed in 'src/lcd/extensible_ui'.
 //
-//#define EXTENSIBLE_UI
-
+#define EXTENSIBLE_UI
+#define EXTUI_NEXTION
+//#define HAS_GRAPHICAL_LCD
 //=============================================================================
 //=============================== Graphical TFTs ==============================
 //=============================================================================
