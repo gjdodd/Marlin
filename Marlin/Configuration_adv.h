@@ -2375,7 +2375,7 @@
 
   // Canon RC-1 or homebrew digital camera trigger
   // Data from: http://www.doc-diy.net/photo/rc-1_hacked/
-  #define PHOTOGRAPH_PIN 55
+  #define PHOTOGRAPH_PIN 23
 
   // Canon Hack Development Kit
   // http://captain-slow.dk/2014/03/09/3d-printing-timelapses/
@@ -2387,21 +2387,18 @@
   // Duration to hold the switch or keep CHDK_PIN high
   //#define PHOTO_SWITCH_MS   50 // (ms) (M240 D)
 
-  #define PHOTO_NIKON
-  // Nikon
-  // Data from: https://www.christidis.info/index.php/personal-projects/arduino-nikon-infrared-command-code
-  // IR Wiring: https://github.com/outofjungle/NikonRemote/blob/master/NikonRemote.cpp
-  #if ENABLED(PHOTO_NIKON)
-    // Pulses, might need tweaking depending on board
-    // make sure to use a PHOTOGRAPH_PIN which can rise and fall quick enough. 
-    // On MKS SBase, temp sensor pin was too slow used P1.23 on J8
-    // pin requires to be running at 48.4khz
-
-    // how long the 48.4khz pulses last going high then low {HIGH,LOW,HIGH,LOW,...}
-    #define PHOTO_PULSES_US {2000,27850,400,1580,400,3580,400}  
-
-    // Delay during HIGH pulses to create the 48.4khz frequency HIGH delay LOW DELAY repeat for the pulse duration
-    #define PHOTO_PULES_DELAY_US 13
+  /**
+   * PHOTO_PULSES_US may need adjustment depending on board and camera model.
+   * Pin must be running at 48.4kHz.
+   * Be sure to use a PHOTOGRAPH_PIN which can rise and fall quick enough.
+   * (e.g., MKS SBase temp sensor pin was too slow, so used P1.23 on J8.)
+   *
+   *  Example pulse data for Nikon: https://bit.ly/2FKD0Aq
+   *                     IR Wiring: https://git.io/JvJf7
+   */
+  #define PHOTO_PULSES_US { 2000, 27850, 400, 1580, 400, 3580, 400 }  // (µs) Durations for each 48.4kHz oscillation
+  #ifdef PHOTO_PULSES_US
+    #define PHOTO_PULSE_DELAY_US 13 // (µs) Approximate duration of each HIGH and LOW pulse in the oscillation
   #endif
 #endif
 
