@@ -130,6 +130,10 @@
 #define PIN_P2_12                          P2_12  // Interrupt Capable
 #define PIN_P2_11                          P2_11  // Interrupt Capable
 
+#define SPINDLE_LASER_PWM_PIN              PIN_P1_23 
+#define SPINDLE_LASER_ENA_PIN              PIN_P2_12 
+
+
 //
 // Průša i3 MK2 Multi Material Multiplexer Support
 //
@@ -344,6 +348,7 @@
 #define PIN_P0_28                          P0_28  // EXP2
 #define PIN_P0_02                          P0_02  // AUX1 (Interrupt Capable/ADC/Serial Port 0)
 #define PIN_P0_03                          P0_03  // AUX1 (Interrupt Capable/ADC/Serial Port 0)
+
 
 /**
  *  PWMs
