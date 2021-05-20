@@ -81,7 +81,9 @@ public:
       //flowmeter_interrupt_disable();
       //  const uint16_t pulses = flowpulses;
       //flowmeter_interrupt_enable();
-      flowrate = flowpulses * 60.0f * (1000.0f / (FLOWMETER_INTERVAL)) * (1000.0f / (FLOWMETER_PPL));
+      //flowrate = flowpulses * 60.0f * (1000.0f / (FLOWMETER_INTERVAL)) * (1000.0f / (FLOWMETER_PPL));
+
+      flowrate = (flowpulses / FLOWMETER_PPL) * ((1000.0f / FLOWMETER_INTERVAL) * 60.0f);
       flowpulses = 0;
     }
 
@@ -89,8 +91,10 @@ public:
     static void flowmeter_task(const millis_t ms=millis()) {
       if (!flowmeter)       // !! The flow meter must always be on !!
         flowmeter_enable(); // Init and prime
-      if (ELAPSED(ms, flowmeter_next_ms)) {
+      if (ELAPSED(ms, flowmeter_next_ms)) {        
+        SERIAL_ECHOPAIR_P("pules: ", flowpulses);
         calc_flowrate();
+        SERIAL_ECHOPAIR_P("flowrate: ", flowrate);
         flowmeter_next_ms = ms + FLOWMETER_INTERVAL;
       }
     }
