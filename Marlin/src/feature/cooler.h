@@ -78,8 +78,7 @@ public:
 
     // Get the total flow (in liters per minute) since the last reading
     static void calc_flowrate() {      
-      // flowrate = (litres) * (seconds) = litres per minute
-      flowrate = (flowpulses / (float)FLOWMETER_PPL) * ((1000.0f / (float)FLOWMETER_INTERVAL) * 60.0f);
+      flowrate = (flowpulses / (float)FLOWMETER_PPL) * ((1000.0f / (float(FLOWMETER_INTERVAL + 0.0f)) * 60.0f);
       flowpulses = 0;
     }
 
@@ -87,10 +86,8 @@ public:
     static void flowmeter_task(const millis_t ms=millis()) {
       if (!flowmeter)       // !! The flow meter must always be on !!
         flowmeter_enable(); // Init and prime
-      if (ELAPSED(ms, flowmeter_next_ms)) {        
-        SERIAL_ECHOPAIR_P("pulses: ", flowpulses);
+      if (ELAPSED(ms, flowmeter_next_ms)) {                
         calc_flowrate();
-        SERIAL_ECHOPAIR_P("flowrate: ", flowrate);
         flowmeter_next_ms = ms + FLOWMETER_INTERVAL;
       }
     }
