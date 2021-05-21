@@ -78,7 +78,7 @@ public:
 
     // Get the total flow (in liters per minute) since the last reading
     static void calc_flowrate() {      
-      flowrate = (flowpulses / (float)FLOWMETER_PPL) * ((1000.0f / (float(FLOWMETER_INTERVAL + 0.0f)) * 60.0f);
+      flowrate = (flowpulses / (float)FLOWMETER_PPL) * (1000.0f / (float(FLOWMETER_INTERVAL + 0.0f)) * 60.0f);
       flowpulses = 0;
     }
 
