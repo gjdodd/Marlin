@@ -35,7 +35,7 @@
 class Cooler {
 public:
   static uint16_t capacity;   // Cooling capacity in watts
-  static uint16_t load;       // Cooling load in watts
+  static uint16_t load;       // Cooling load in watts  
 
   static bool enabled;
   static void enable()  { enabled = true; }
@@ -77,13 +77,9 @@ public:
     static void flowmeter_disable() { set_flowmeter(false); flowmeter_interrupt_disable(); flowpulses = 0; }
 
     // Get the total flow (in liters per minute) since the last reading
-    static void calc_flowrate() {
-      //flowmeter_interrupt_disable();
-      //  const uint16_t pulses = flowpulses;
-      //flowmeter_interrupt_enable();
-      //flowrate = flowpulses * 60.0f * (1000.0f / (FLOWMETER_INTERVAL)) * (1000.0f / (FLOWMETER_PPL));
-
-      flowrate = (flowpulses / FLOWMETER_PPL) * ((1000.0f / FLOWMETER_INTERVAL) * 60.0f);
+    static void calc_flowrate() {      
+      // flowrate = (litres) * (seconds) = litres per minute
+      flowrate = (flowpulses / (float)FLOWMETER_PPL) * ((1000.0f / (float)FLOWMETER_INTERVAL) * 60.0f);
       flowpulses = 0;
     }
 
@@ -92,7 +88,7 @@ public:
       if (!flowmeter)       // !! The flow meter must always be on !!
         flowmeter_enable(); // Init and prime
       if (ELAPSED(ms, flowmeter_next_ms)) {        
-        SERIAL_ECHOPAIR_P("pules: ", flowpulses);
+        SERIAL_ECHOPAIR_P("pulses: ", flowpulses);
         calc_flowrate();
         SERIAL_ECHOPAIR_P("flowrate: ", flowrate);
         flowmeter_next_ms = ms + FLOWMETER_INTERVAL;
