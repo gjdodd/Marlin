@@ -126,8 +126,8 @@
 #define PIN_P2_12                          P2_12  // Interrupt Capable
 #define PIN_P2_11                          P2_11  // Interrupt Capable
 
-#define SPINDLE_LASER_PWM_PIN              P1_23
-#define SPINDLE_LASER_ENA_PIN              P2_06 //PIN_P2_12 
+#define SPINDLE_LASER_PWM_PIN              P2_06
+#define SPINDLE_LASER_ENA_PIN              P1_23 //PIN_P2_12 
 
 
 //
