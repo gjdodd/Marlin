@@ -231,7 +231,7 @@
 
 #ifndef FAN_PIN
   #if EITHER(IS_RAMPS_EFB, IS_RAMPS_EFF)          // Hotend, Fan, Bed or Hotend, Fan, Fan
-    #define FAN_PIN                 RAMPS_D9_PIN
+    #define FAN_PIN                 RAMPS_D8_PIN
   #elif EITHER(IS_RAMPS_EEF, IS_RAMPS_SF)         // Hotend, Hotend, Fan or Spindle, Fan
     #define FAN_PIN                 RAMPS_D8_PIN
   #elif ENABLED(IS_RAMPS_EEB)                     // Hotend, Hotend, Bed
@@ -274,7 +274,7 @@
 #if HAS_CUTTER && !defined(SPINDLE_LASER_ENA_PIN)
   #if !NUM_SERVOS                                 // Use servo connector if possible
     #define SPINDLE_LASER_ENA_PIN              4  // Pullup or pulldown!
-    #define SPINDLE_LASER_PWM_PIN              6  // Hardware PWM
+    #define SPINDLE_LASER_PWM_PIN              RAMPS_D9_PIN //6  // Hardware PWM
     #define SPINDLE_DIR_PIN                    5
   #elif HAS_FREE_AUX2_PINS
     #define SPINDLE_LASER_ENA_PIN             40  // Pullup or pulldown!
