@@ -671,9 +671,13 @@
     //#define DEFAULT_Ki   1.08
     //#define DEFAULT_Kd 114.00
 
-    #define DEFAULT_Kp 12.45
-    #define DEFAULT_Ki 0.82
-    #define DEFAULT_Kd 52.09
+    //#define DEFAULT_Kp 12.45
+    //#define DEFAULT_Ki 0.82
+    //#define DEFAULT_Kd 52.09
+
+    #define DEFAULT_Kp 20.75
+    #define DEFAULT_Ki 1.53
+    #define DEFAULT_Kd 69.90
   #endif
 #endif
 
